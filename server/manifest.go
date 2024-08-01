@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/ollama/ollama/types/model"
 )
+
+const ManifestSchemaVersion = 2
 
 type Manifest struct {
 	SchemaVersion int      `json:"schemaVersion"`
@@ -57,6 +60,18 @@ func (m *Manifest) RemoveLayers() error {
 	return nil
 }
 
+func (m *Manifest) Validate() error {
+	if m.SchemaVersion != ManifestSchemaVersion {
+		return fmt.Errorf("unknown manifest schema (got %d, expected %d)", m.SchemaVersion, ManifestSchemaVersion)
+	}
+
+	if m.Config == nil {
+		return fmt.Errorf("invalid manifest")
+	}
+
+	return nil
+}
+
 func ParseNamedManifest(n model.Name) (*Manifest, error) {
 	if !n.IsFullyQualified() {
 		return nil, model.Unqualified(n)
@@ -84,6 +99,10 @@ func ParseNamedManifest(n model.Name) (*Manifest, error) {
 	sha256sum := sha256.New()
 	if err := json.NewDecoder(io.TeeReader(f, sha256sum)).Decode(&m); err != nil {
 		return nil, err
+	}
+
+	if err := m.Validate(); err != nil {
+		return nil, fmt.Errorf("%v: %s", err, p)
 	}
 
 	m.filepath = p

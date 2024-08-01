@@ -24,7 +24,12 @@ func createManifest(t *testing.T, path, name string) {
 	}
 	defer f.Close()
 
-	if err := json.NewEncoder(f).Encode(Manifest{}); err != nil {
+	m := Manifest{
+		SchemaVersion: ManifestSchemaVersion,
+		Config:        &Layer{},
+	}
+
+	if err := json.NewEncoder(f).Encode(m); err != nil {
 		t.Fatal(err)
 	}
 }
