@@ -17,7 +17,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/envconfig"
 	"github.com/ollama/ollama/llm"
 	"github.com/ollama/ollama/template"
 )
@@ -242,7 +241,6 @@ The temperature in San Francisco, CA is 70°F and in Toronto, Canada is 20°C.`,
 func TestParseFromFileFromLayer(t *testing.T) {
 	tempModels := t.TempDir()
 	t.Setenv("OLLAMA_MODELS",tempModels)
-	envconfig.LoadConfig()
 	digest := "sha256-fb9d435dc2c4fe681ce63917c062c91022524e9ce57474c9b10ef5169495d902"
 
 	_, err := GetBlobsPath(digest)
@@ -252,6 +250,7 @@ func TestParseFromFileFromLayer(t *testing.T) {
 
 	file, err := os.CreateTemp(tempModels+"/blobs", digest)
 	if err != nil {
+		fmt.Printf("failed to open file: %v", err)
 		t.Fatalf("failed to open file: %v", err)
 	}
 	defer file.Close()
